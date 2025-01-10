@@ -5,8 +5,15 @@
 #include <stack>
 #include <queue>
 
-using Node     = char;
-using EdgeList = std::vector< std::tuple<Node, int> >;
+using Node = const char*;
+struct Edge
+{
+  Edge(Node n, int w=1) : Neighbour{n}, Weight{w} {}
+  Node Neighbour;
+  int Weight;
+};
+
+using EdgeList = std::vector<Edge>;
 using Graph    = std::unordered_map<Node, EdgeList>;
 
 void RecursiveDFS(Node node, const Graph& graph, void(*visit)(Node), 
@@ -44,7 +51,7 @@ void DFS(Node start, const Graph& graph, void(*visit)(Node))
       throw;
 
     for(auto rit = it->second.rbegin(); rit != it->second.rend(); ++rit)
-      stack.push( std::get<0>(*rit));
+      stack.push( rit->Neighbour);
   }
 }
 
@@ -70,19 +77,48 @@ void BFS(Node start, const Graph& graph, void(*visit)(Node))
 
 }
 
+size_t ConnectedComponents(const Graph& graph)
+{
+  size_t n = 0;
+  std::unordered_set<Node> visited;
+
+  for(auto kv : graph)
+  {
+    Node node = kv.first;
+
+    if(visited.find(node) != visited.end())
+      continue;
+
+    ++n;
+    RecursiveDFS(node, graph, [](auto){}, visited);
+  }
+
+  return n;
+}
+
 int main()
 {
   Graph graph;
-  graph['a'] = EdgeList{ {'b', 1}, {'c', 1} };
-  graph['b'] = {};
-  graph['c'] = EdgeList{ {'b', 1}, {'d', 1} };
-  graph['d'] = {};
+  graph["0"]  = {"4", "8", "14", "13"};
+  graph["1"]  = {"5"};
+  graph["2"]  = {"15", "9"};
+  graph["3"]  = {"9"};
+  graph["4"]  = {"8", "0"};
+  graph["5"]  = {"1", "16", "17"};
+  graph["6"]  = {"7", "11"};
+  graph["7"]  = {"6", "11"};
+  graph["8"]  = {"4", "0", "14"};
+  graph["9"]  = {"3", "15", "2"};
+  graph["10"] = {"15"};
+  graph["11"] = {"6", "7"};
+  graph["12"] = {};
+  graph["13"] = {"0", "14"};
+  graph["14"] = {"0", "13", "8"};
+  graph["15"] = {"10", "2", "9"};
+  graph["16"] = {"5"};
+  graph["17"] = {"5"};
 
-  BFS('a', graph, [](auto node)
-  {
-    std::cout << "visit: " << node << '\n';
-  });
-
+  std::cout << ConnectedComponents(graph) << '\n';
   return 0;
 }
 
