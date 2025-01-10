@@ -60,6 +60,7 @@ void BFS(Node start, const Graph& graph, void(*visit)(Node))
   std::queue<Node> queue;
   queue.emplace(start);
 
+  std::unordered_set<Node> visited;
   while(!queue.empty())
   {
     Node node = queue.front();
@@ -72,7 +73,10 @@ void BFS(Node start, const Graph& graph, void(*visit)(Node))
       throw;
 
     for(auto [n, w] : it->second)
-      queue.emplace(n);
+    {
+      if(visited.find(n) == visited.end()) 
+        queue.emplace(n);
+    }
   }
 
 }
