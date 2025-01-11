@@ -1,9 +1,14 @@
-#include <iostream>
+#pragma once
+
+#include <cstddef>
 #include <vector>
 #include <unordered_map>
 #include <unordered_set>
 #include <stack>
 #include <queue>
+#include <string_view>
+#include <tuple>
+#include <functional>
 
 using Node = const char*;
 struct Edge
@@ -61,6 +66,8 @@ void BFS(Node start, const Graph& graph, void(*visit)(Node))
   queue.emplace(start);
 
   std::unordered_set<Node> visited;
+  visited.emplace(start);
+
   while(!queue.empty())
   {
     Node node = queue.front();
@@ -100,29 +107,78 @@ size_t ConnectedComponents(const Graph& graph)
   return n;
 }
 
-int main()
-{
-  Graph graph;
-  graph["0"]  = {"4", "8", "14", "13"};
-  graph["1"]  = {"5"};
-  graph["2"]  = {"15", "9"};
-  graph["3"]  = {"9"};
-  graph["4"]  = {"8", "0"};
-  graph["5"]  = {"1", "16", "17"};
-  graph["6"]  = {"7", "11"};
-  graph["7"]  = {"6", "11"};
-  graph["8"]  = {"4", "0", "14"};
-  graph["9"]  = {"3", "15", "2"};
-  graph["10"] = {"15"};
-  graph["11"] = {"6", "7"};
-  graph["12"] = {};
-  graph["13"] = {"0", "14"};
-  graph["14"] = {"0", "13", "8"};
-  graph["15"] = {"10", "2", "9"};
-  graph["16"] = {"5"};
-  graph["17"] = {"5"};
+//for Grid based functions
+struct XY 
+{ 
+  int X, Y; 
 
-  std::cout << ConnectedComponents(graph) << '\n';
-  return 0;
+  bool operator==(const XY& other) const
+  {
+    return X == other.X && Y == other.Y;
+  }
+};
+namespace std //make XY hashable for stl containers
+{
+  template<>
+  struct hash<XY>
+  { 
+    std::size_t operator()(const XY& xy) const 
+    {
+      return std::hash<int>()(xy.X) ^ (std::hash<int>()(xy.Y) << 1);
+    }
+  };
+}
+
+bool GridBFS(std::string_view grid, XY dims, XY start, 
+    std::function<bool(XY)> visit, //to stop search return false
+    std::function<bool(XY)> shouldQueue = [](auto){ return true; }) 
+{
+  static const XY moveDirs[] = 
+  {
+    {+1,+0},
+    {+0,+1},
+    {-1,+0},
+    {+0,-1},
+  };
+
+  std::queue<XY> queue;
+  std::vector<bool> visited((dims.X+1) * (dims.Y+1), false);
+
+  queue.emplace(start);
+  visited[(start.Y * (dims.X+1)) + start.X] = true;
+
+  while(!queue.empty())
+  {
+    XY node = queue.front();
+    queue.pop();
+
+    if(visit(node))
+      return true;
+
+    //visit every possible neighbour (every direction):
+    for(size_t i = 0; i < sizeof(moveDirs)/sizeof(moveDirs[0]); ++i)
+    {
+      XY neighbour = {node.X+moveDirs[i].X, node.Y+moveDirs[i].Y};
+
+      //dont visit out of bounds neighbour nodes
+      if((neighbour.X < 0) || (neighbour.X > dims.X) ||
+         (neighbour.Y < 0) || (neighbour.Y > dims.Y) )
+        continue;
+
+      //dont visit already visited nodes
+      if(visited[(neighbour.Y * (dims.X+1)) + neighbour.X])
+        continue;
+
+      //dont visit if callback says no
+      if(!shouldQueue(neighbour))
+        continue;
+
+      visited[(neighbour.Y * (dims.X+1)) + neighbour.X] = true;
+      queue.emplace(neighbour);
+    }
+
+  }
+
+  return false;
 }
 
