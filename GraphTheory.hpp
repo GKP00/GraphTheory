@@ -6,7 +6,6 @@
 #include <unordered_set>
 #include <stack>
 #include <queue>
-#include <string_view>
 #include <tuple>
 #include <functional>
 
@@ -129,7 +128,7 @@ namespace std //make XY hashable for stl containers
   };
 }
 
-bool GridBFS(std::string_view grid, XY dims, XY start, 
+bool GridBFS(XY dims, XY start, 
     std::function<bool(XY)> visit, //to stop search return false
     std::function<bool(XY)> shouldQueue = [](auto){ return true; }) 
 {

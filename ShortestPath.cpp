@@ -11,7 +11,7 @@ std::vector<XY> FindShortestPath(std::string_view grid, XY dims, XY start={0,0})
   std::unordered_map<XY, XY> parentMap;
   XY currentParent;
 
-  bool foundTarget = GridBFS(grid, dims, start, 
+  bool foundTarget = GridBFS(dims, start, 
   [&](auto node)
   {
     currentParent = node;
